@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"os"
-	"strconv"
 
 	r "github.com/go-redis/redis/v8"
 	log "github.com/sirupsen/logrus"
@@ -49,11 +48,8 @@ func run(ctx *cli.Context) (err error) {
 			log.WithError(err).Error("can't get gas price")
 			continue
 		}
-		fastestStr := strconv.FormatFloat(fastest, 'E', -1, 64)
-		fastStr := strconv.FormatFloat(fast, 'E', -1, 64)
-		averageStr := strconv.FormatFloat(average, 'E', -1, 64)
-		store.RedisClient.Set(context.Background(), "gas.fastest", fastestStr, -1)
-		store.RedisClient.Set(context.Background(), "gas.fast", fastStr, -1)
-		store.RedisClient.Set(context.Background(), "gas.average", averageStr, -1)
+		store.RedisClient.Set(context.Background(), "gas.fastest", fastest, -1)
+		store.RedisClient.Set(context.Background(), "gas.fast", fast, -1)
+		store.RedisClient.Set(context.Background(), "gas.average", average, -1)
 	}
 }
