@@ -43,24 +43,53 @@ func run(ctx *cli.Context) (err error) {
 		Password: "",
 		DB:       0,
 	})
+	prevFastests := make([]float64, 3)
+	prevFasts := make([]float64, 3)
+	prevAves := make([]float64, 3)
+	lastIndex := 0
 	for {
 		fastest, fast, average, err := g.GetGasPrice()
 		if err != nil {
 			log.WithError(err).Error("can't get gas price")
 			continue
 		}
+
+		// 防止出现突然极低的gas，因此当gas小于前三次gas的平均数的一半时舍弃不用
+		prevFastest := floatSum(prevFastests) / 3
+		prevFast := floatSum(prevFasts) / 3
+		prevAve := floatSum(prevAves) / 3
+
 		var td time.Duration = time.Minute * 5
-		if err := store.RedisClient.Set(context.Background(), "gas.fastest", fastest, td).Err(); err != nil {
-			log.WithError(err).Error("set redis failed")
-			continue
+
+		if prevFastest/2 <= fastest {
+			if err := store.RedisClient.Set(context.Background(), "gas.fastest", fastest, td).Err(); err != nil {
+				log.WithError(err).Error("set redis failed")
+				continue
+			}
 		}
-		if err := store.RedisClient.Set(context.Background(), "gas.fast", fast, td).Err(); err != nil {
-			log.WithError(err).Error("set redis failed")
-			continue
+		if prevFast/2 <= fast {
+			if err := store.RedisClient.Set(context.Background(), "gas.fast", fast, td).Err(); err != nil {
+				log.WithError(err).Error("set redis failed")
+				continue
+			}
 		}
-		if err := store.RedisClient.Set(context.Background(), "gas.average", average, td).Err(); err != nil {
-			log.WithError(err).Error("set redis failed")
-			continue
+		if prevAve/2 <= average {
+			if err := store.RedisClient.Set(context.Background(), "gas.average", average, td).Err(); err != nil {
+				log.WithError(err).Error("set redis failed")
+				continue
+			}
 		}
+		prevFastests[lastIndex] = fastest
+		prevFasts[lastIndex] = fast
+		prevAves[lastIndex] = average
+		lastIndex = (lastIndex + 1) % 3
 	}
+}
+
+func floatSum(arr []float64) float64 {
+	var s float64
+	for _, n := range arr {
+		s += n
+	}
+	return s
 }
