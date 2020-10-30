@@ -49,7 +49,7 @@ func run(ctx *cli.Context) (err error) {
 			log.WithError(err).Error("can't get gas price")
 			continue
 		}
-		var td time.Duration = time.Second * 20
+		var td time.Duration = time.Minute * 5
 		if err := store.RedisClient.Set(context.Background(), "gas.fastest", fastest, td).Err(); err != nil {
 			log.WithError(err).Error("set redis failed")
 			continue
