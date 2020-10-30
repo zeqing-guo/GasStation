@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"time"
 
 	r "github.com/go-redis/redis/v8"
 	log "github.com/sirupsen/logrus"
@@ -48,8 +49,18 @@ func run(ctx *cli.Context) (err error) {
 			log.WithError(err).Error("can't get gas price")
 			continue
 		}
-		store.RedisClient.Set(context.Background(), "gas.fastest", fastest, -1)
-		store.RedisClient.Set(context.Background(), "gas.fast", fast, -1)
-		store.RedisClient.Set(context.Background(), "gas.average", average, -1)
+		var td time.Duration = time.Second * 20
+		if err := store.RedisClient.Set(context.Background(), "gas.fastest", fastest, td).Err(); err != nil {
+			log.WithError(err).Error("set redis failed")
+			continue
+		}
+		if err := store.RedisClient.Set(context.Background(), "gas.fast", fast, td).Err(); err != nil {
+			log.WithError(err).Error("set redis failed")
+			continue
+		}
+		if err := store.RedisClient.Set(context.Background(), "gas.average", average, td).Err(); err != nil {
+			log.WithError(err).Error("set redis failed")
+			continue
+		}
 	}
 }
