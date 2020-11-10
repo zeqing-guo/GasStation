@@ -12,7 +12,7 @@ tags := $(platform)
 
 GOBUILD := go build -tags "$(tags)"
 
-bin/sushi:
+bin/gas:
 	$(GOBUILD) \
 		-o bin/gas \
 		github.com/zeqing-guo/GasStation/cmd/gas
